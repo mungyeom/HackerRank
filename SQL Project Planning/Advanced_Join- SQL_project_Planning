@@ -1,0 +1,30 @@
+-- You are given a table, Projects, containing three columns: Task_ID, Start_Date and End_Date. 
+-- It is guaranteed that the difference between the End_Date and the Start_Date is equal to 1 day for each row in the table.
+-- If the End_Date of the tasks are consecutive, then they are part of the same project. 
+-- Samantha is interested in finding the total number of different projects completed.
+
+-- Write a query to output the start and end dates of projects listed by the number of days it took to complete the project in ascending order. 
+-- If there is more than one project that have the same number of completion days, then order by the start date of the project.
+-- Data type : Task_ID: Integer, Start_Date: Date, End_Date: Date
+
+SELECT 
+    MIN(Start_Date) AS Project_Start, 
+    MAX(End_Date) AS Project_End
+FROM (
+    SELECT 
+        Start_Date, 
+        End_Date,
+        -- ProjectsGrouped now initializes the variables @project_id and @prev_end_date at the start of its execution.
+        -- It assigns a ProjectID to each row, incrementing it whenever a new project starts
+        @project_id := IF(@prev_end_date IS NULL OR @prev_end_date < Start_Date, @project_id + 1, @project_id) AS ProjectID,
+        -- IF Syntax: IF(condition, value_if_true, value_if_false)
+        -- " := " Assign a value
+        @prev_end_date := End_Date
+    FROM 
+        Projects,
+        (SELECT @project_id := 0, @prev_end_date := NULL) AS init
+    ORDER BY 
+        Start_Date, End_Date
+) AS ProjectsGrouped
+GROUP BY ProjectID
+ORDER BY DATEDIFF(MAX(End_Date), MIN(Start_Date)), MIN(Start_Date);
